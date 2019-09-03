@@ -1,0 +1,6 @@
+backup/*
+*.log
+*.bz2
+*.tmp
+*.swp
+.conf
