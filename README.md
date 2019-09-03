@@ -4,7 +4,7 @@ For Linux backup, generating .tar.bz2 packages.
 # Usage
 Just copy default.conf to .conf and then edit it as you wish. 
 
-Run it with bash:
+Run it with zsh (suggested):
 ```
-bash run-backup.sh
+zsh run-backup.sh
 ```
