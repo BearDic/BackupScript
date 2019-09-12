@@ -23,12 +23,13 @@ tar -cjpf $FILE_NAME ${SAVE_DIR}/${DATE} --remove-files
 
 if [ ! -z "$UPLOAD_CMD" ]
 then
-    if [[ $SHELL == *zsh ]]
-    then
-        ${=UPLOAD_CMD/"{filename}"/$FILE_NAME}
-    else
-        ${UPLOAD_CMD/"{filename}"/$FILE_NAME}
-    fi
+    # FUCK. I don't know why it didn't work in cron, so I won't care about bash anymore.
+    #if [[ $SHELL == *zsh ]]
+    #then
+    ${=UPLOAD_CMD/"{filename}"/$FILE_NAME}
+    #else
+    #    ${UPLOAD_CMD/"{filename}"/$FILE_NAME}
+    #fi
 fi
 
 echo "[$(date +%T)] - [Job done!]"
