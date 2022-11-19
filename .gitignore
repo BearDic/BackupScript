@@ -1,6 +1,3 @@
-backup/*
-*.log
-*.bz2
-*.tmp
-*.swp
-.conf
+secret
+tar-files
+tar-exclude

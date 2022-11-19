@@ -1,35 +1,46 @@
-SCRIPT_PATH=$(readlink -f "$0")
-DIR=$(dirname $SCRIPT_PATH)
+#!/bin/bash
 
-source $DIR/.conf
+# This script requires three files in the same dir:
+# - secret:
+#     mysql secret
+#     a function named put_backup who puts $1 and $2 to the wanted place
+# - tar-files and tar-exclude: files that will be packed into tarball
 
-DATE=$(date +%Y%m%d)
-EXCLUDE_CMD=("")
-for i in $EXCLUDE_FILES
-do
-    EXCLUDE_CMD+=("--exclude=${i}")
-done
-FILE_NAME=${SAVE_DIR}/${DATE}.tar.bz2
+set -e
 
-mkdir -p $SAVE_DIR
-echo '' && date &&echo "[$(date +%T)] - [Deleting old backup...]"
-find $SAVE_DIR -mtime +$EXPIRE_DAYS -name "*.*" -exec rm -rf {} \;
-echo "[$(date +%T)] - [Making directory...]"
-mkdir -p ${SAVE_DIR}/${DATE}/
-echo "[$(date +%T)] - [Preparing backup...]"
-mysqldump -u${MYSQL_USERNAME} -p${MYSQL_PASSWORD} -A > ${SAVE_DIR}/${DATE}/mysql.sql
-tar -cpf ${SAVE_DIR}/${DATE}/files.tar ${BACKUP_FILES} ${EXCLUDE_CMD}
-tar -cjpf $FILE_NAME ${SAVE_DIR}/${DATE} --remove-files
+THIS_DIR=$( cd "$( dirname "${BASH_SOURCE[0]:-${(%):-%x}}" )" && pwd )
+source "$THIS_DIR/secret"
 
-if [ ! -z "$UPLOAD_CMD" ]
-then
-    # FUCK. I don't know why it didn't work in cron, so I won't care about bash anymore.
-    #if [[ $SHELL == *zsh ]]
-    #then
-    ${=UPLOAD_CMD/"{filename}"/$FILE_NAME}
-    #else
-    #    ${UPLOAD_CMD/"{filename}"/$FILE_NAME}
-    #fi
+TARGET_DIR="/tmp/backup/$(hostname)-backup-$(date +%Y%m%d-%H%M)"
+TARGET_TARBALL="$TARGET_DIR.tar.xz"
+TARGET_TARBALL_SHA256="$TARGET_TARBALL.sha256"
+cleanup()
+{
+    echo "exit. cleaning tmp files ..."
+    rm -rf "$TARGET_DIR" "$TARGET_TARBALL" "$TARGET_TARBALL_SHA256"
+}
+trap cleanup EXIT
+
+if [[ -d "$TARGET_DIR" ]]; then
+    echo "the target directory $TARGEN_DIR already exists. check if there's some errors"
+    exit 1
+fi
+mkdir -p "$TARGET_DIR"
+
+# tar
+if [[ -s "$THIS_DIR/tar-files" ]]; then
+    tar -cpf "$TARGET_DIR/rootfs.tar" -X "$THIS_DIR/tar-exclude" -T "$THIS_DIR/tar-files"
 fi
 
-echo "[$(date +%T)] - [Job done!]"
+# mysql
+if [[ -x $(command -v mysqldump) ]]; then
+    mysqldump -u"$MYSQL_USERNAME" -p"$MYSQL_PASSWORD" -h"$MYSQL_HOST" -A > "${TARGET_DIR}/mysql.sql"
+fi
+
+# pack
+cd "$TARGET_DIR/.."
+tar -cJpf "$TARGET_TARBALL" --remove-files $(basename "$TARGET_DIR")
+sha256sum $(basename "$TARGET_TARBALL") > "$TARGET_TARBALL_SHA256"
+
+# put
+put_backup "$TARGET_TARBALL" "$TARGET_TARBALL_SHA256"
