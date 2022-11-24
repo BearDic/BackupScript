@@ -33,7 +33,7 @@ if [[ -s "$THIS_DIR/tar-files" ]]; then
 fi
 
 # mysql
-if [[ -x $(command -v mysqldump) ]]; then
+if [[ -x $(command -v mysqldump) && -n "$MYSQL_USERNAME" ]]; then
     mysqldump -u"$MYSQL_USERNAME" -p"$MYSQL_PASSWORD" -h"$MYSQL_HOST" -A > "${TARGET_DIR}/mysql.sql"
 fi
 
@@ -44,3 +44,5 @@ sha256sum $(basename "$TARGET_TARBALL") > "$TARGET_TARBALL_SHA256"
 
 # put
 put_backup "$TARGET_TARBALL" "$TARGET_TARBALL_SHA256"
+echo "job done!"
+
