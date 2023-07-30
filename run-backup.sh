@@ -37,6 +37,11 @@ if [[ -x $(command -v mysqldump) && -n "$MYSQL_USERNAME" ]]; then
     mysqldump -u"$MYSQL_USERNAME" -p"$MYSQL_PASSWORD" -h"$MYSQL_HOST" -A > "${TARGET_DIR}/mysql.sql"
 fi
 
+# influx
+if [[ -n $(pgrep influxd 2>/dev/null) && $(influx ping 2>/dev/null) == "OK" ]]; then
+    influx backup "${TARGET_DIR}/influx.bak"
+fi
+
 # pack
 cd "$TARGET_DIR/.."
 tar -cJpf "$TARGET_TARBALL" --remove-files $(basename "$TARGET_DIR")
