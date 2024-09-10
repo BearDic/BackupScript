@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 test -n "$1" || ( echo "no directory specified"; exit 1)

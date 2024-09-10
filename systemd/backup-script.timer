@@ -1,0 +1,9 @@
+[Unit]
+
+[Timer]
+OnCalendar=weekly
+RandomizedDelaySec=1d
+Unit=backup-script.service
+
+[Install]
+WantedBy=timers.target

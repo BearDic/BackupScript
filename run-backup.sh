@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script requires three files in the same dir:
 # - secret:
@@ -12,7 +12,7 @@ THIS_DIR=$( cd "$( dirname "${BASH_SOURCE[0]:-${(%):-%x}}" )" && pwd )
 source "$THIS_DIR/secret"
 
 TARGET_DIR="/tmp/backup/$(hostname)-backup-$(date +%Y%m%d-%H%M)"
-TARGET_TARBALL="$TARGET_DIR.tar.xz"
+TARGET_TARBALL="$TARGET_DIR.tar.zst"
 TARGET_TARBALL_SHA256="$TARGET_TARBALL.sha256"
 cleanup()
 {
@@ -44,10 +44,9 @@ fi
 
 # pack
 cd "$TARGET_DIR/.."
-tar -cJpf "$TARGET_TARBALL" --remove-files $(basename "$TARGET_DIR")
+tar -cpI "zstdmt -19" -f "$TARGET_TARBALL" --remove-files $(basename "$TARGET_DIR")
 sha256sum $(basename "$TARGET_TARBALL") > "$TARGET_TARBALL_SHA256"
 
 # put
 put_backup "$TARGET_TARBALL" "$TARGET_TARBALL_SHA256"
 echo "job done!"
-
